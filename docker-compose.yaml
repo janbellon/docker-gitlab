@@ -1,0 +1,80 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab.enpos.fr'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Add any other gitlab.rb configuration here, each on its own line
+        external_url 'https://gitlab.enpos.fr'
+        letsencrypt['enable'] = false
+        gitlab_rails['object_store']['enabled'] = true
+        gitlab_rails['object_store']['connection'] = {
+          'provider' => 'AWS',
+          'region' => 'us-east-1',
+          'endpoint' => 'https://s3.nobell.fr',
+          'aws_access_key_id' => '${S3_ACCESS_KEY}',
+          'aws_secret_access_key' => '${S3_SECRET_KEY}',
+          'path_style' => false
+        }
+        gitlab_rails['object_store']['objects']['uploads']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['lfs']['bucket'] = 'gitlab-lfs'
+        gitlab_rails['object_store']['objects']['artifacts']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['external_diffs']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['packages']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['dependency_proxy']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['terraform_state']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['pages']['bucket'] = 'gitlab'
+        gitlab_rails['object_store']['objects']['ci_secure_files']['bucket'] = 'gitlab'
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "25"
+        gitlab_rails['smtp_port'] = 25
+        gitlab_rails['smtp_domain'] = "gmail.com"
+        gitlab_rails['gitlab_email_from'] = 'notifications.enpos@gmail.com'
+        gitlab_rails['gitlab_email_reply_to'] = 'notifications.enpos@gmail.com'
+        gitlab_rails['db_adapter'] = 'postgresql'
+        gitlab_rails['db_encoding'] = 'unicode'
+        gitlab_rails['db_collation'] = nil
+        gitlab_rails['db_database'] = 'jan_gitlab'
+        gitlab_rails['db_username'] = 'jan_gitlab_user'
+        gitlab_rails['db_password'] = '${DB_PASSWORD}'
+        gitlab_rails['db_host'] = '10.34.0.10'
+        gitlab_rails['db_port'] = 5432
+        gitlab_rails['db_sslmode'] = 'prefer'
+        gitlab_rails['initial_root_password'] = '${INITIAL_ROOT_PASSWORD}'
+        gitlab_rails['ldap_enabled'] = true
+        gitlab_rails['ldap_servers'] = {
+          'main' => {
+            'label' => 'LDAP',
+            'host' => 'auth.srv.nbl.lan',
+            'port' => 636,
+            'uid' => 'cn',
+            'bind_dn' => 'cn=ldapservice,ou=users,dc=ldap,dc=goauthentik,dc=io',
+            'password' => '${BIND_PASSWORD}',
+            'encryption' => 'simple_tls',
+            'verify_certificates' => false,
+            'timeout' => 10,
+            'active_directory' => false,
+            'user_filter' => '(objectclass=person)',
+            'base' => 'ou=users,dc=ldap,dc=goauthentik,dc=io',
+            'lowercase_usernames' => 'true',
+            'retry_empty_result_with_codes' => [80],
+            'allow_username_or_email_login' => false,
+            'block_auto_created_users' => false,
+            'skip_verify_user' => true
+          }
+        }
+    env_file:
+      - secrets.env
+    ports:
+      - '8080:80'
+      - '8443:443'
+      - '2222:22'
+    volumes:
+      - '/root/gitlab/config:/etc/gitlab'
+      - '/root/gitlab/logs:/var/log/gitlab'
+      - '/root/gitlab/data:/var/opt/gitlab'
+      - '/root/gitlab/ssl:/etc/gitlab/ssl'
+      - '/root/gitlab/trusted-certs:/etc/gitlab/trusted-certs'
+    shm_size: '256m'
