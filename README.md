@@ -10,5 +10,6 @@ This will create data directories, and retrieve secrets from vault, then write t
 
 # To run gitlab
 ```bash
+. secrets.env
 docker compose up -d
 ```

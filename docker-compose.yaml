@@ -3,7 +3,7 @@ services:
     image: gitlab/gitlab-ce:latest
     container_name: gitlab
     restart: always
-    hostname: 'gitlab.enpos.fr'
+    hostname: 'gitlab.nobell.fr'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         # Add any other gitlab.rb configuration here, each on its own line
@@ -65,16 +65,14 @@ services:
             'skip_verify_user' => true
           }
         }
-    env_file:
-      - secrets.env
     ports:
       - '8080:80'
       - '8443:443'
       - '2222:22'
     volumes:
-      - '/root/gitlab/config:/etc/gitlab'
-      - '/root/gitlab/logs:/var/log/gitlab'
-      - '/root/gitlab/data:/var/opt/gitlab'
-      - '/root/gitlab/ssl:/etc/gitlab/ssl'
-      - '/root/gitlab/trusted-certs:/etc/gitlab/trusted-certs'
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'
+      - './gitlab/ssl:/etc/gitlab/ssl'
+      - './gitlab/trusted-certs:/etc/gitlab/trusted-certs'
     shm_size: '256m'
